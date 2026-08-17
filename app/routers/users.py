@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException
-from app.schemas.user_schemas import UserSchemaPost, UserSchemaResponse, UserSchemaName, UserOrdersSchema, UserStatsSchema, UserFormattedSchema
+from app.schemas.user_schemas import UserSchemaPost, UserSchemaResponse, UserSchemaName, UserOrdersSchema, UserStatsSchema, UserFormattedSchema, UserTopSchema
 from app.database import get_connection
 from sqlalchemy import insert, select, func, update, delete
 from app.models import users, orders
@@ -145,7 +145,13 @@ async def get_user_filter(
 @router.get('/with-orders', status_code=status.HTTP_200_OK, response_model=List[UserOrdersSchema])
 async def get_user_orders_join():
     """Присоедение ORDERS к USERS"""
-    stmt = select(users).join(orders, users.c.id == orders.c.user_id)
+    stmt = select(users.c.id,
+                  users.c.name,
+                  users.c.email,
+                  users.c.age,
+                  users.c.created_at,
+                  orders.c.id.label("order_id"),
+                  orders.c.total).join(orders, users.c.id == orders.c.user_id)
 
     async with get_connection() as conn:
         result = await conn.execute(stmt)
@@ -187,7 +193,7 @@ async def get_user_sorted(
         return rows
 
 
-@router.get('/top-spenders', status_code = status.HTTP_200_OK, response_model=List[UserSchemaResponse])
+@router.get('/top-spenders', status_code = status.HTTP_200_OK, response_model=List[UserTopSchema])
 async def get_user_top_spenders(value: int | None = 0):
     """Получение пользователей, где общая сумма больше value"""
 

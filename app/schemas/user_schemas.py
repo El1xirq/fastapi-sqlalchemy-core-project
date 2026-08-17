@@ -30,7 +30,7 @@ class UserSchemaName(UserSchema):
     name: str
 
 class UserOrdersSchema(UserSchemaResponse):
-    user_id: int
+    order_id: int
     total: float
 
 
@@ -46,6 +46,12 @@ class UserFormattedSchema(UserSchemaResponse):
     name_length: int
     email_domain: str
 
+
+class UserTopSchema(UserSchema):
+    id: int
+    name: str
+    email: EmailStr
+    total_spent: float
 
 
 

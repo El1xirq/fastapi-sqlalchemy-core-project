@@ -1,14 +1,24 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 
 
-class OrderSchema(BaseModel):
-    pass
+class OrderListSchema(BaseModel):
+    id: int
+    user_id: int
+    total: float
+    created_at: datetime
 
-class OrderItemCreateSchema(OrderSchema):
+
+class OrderItemCreateSchema(BaseModel):
     product_id: int
     quantity: int
+
+
+class OrderItemResponseSchema(BaseModel):
+    product_id: int
+    quantity: int
+    price_at_time: float
 
 
 class OrderCreateSchema(BaseModel):
@@ -16,20 +26,25 @@ class OrderCreateSchema(BaseModel):
     items: List[OrderItemCreateSchema]
 
 
-class OrderResponseSchema(OrderSchema):
+class OrderResponseSchema(BaseModel):
     id: int
     user_id: int
     total: float
     created_at: datetime
+    items: List[OrderItemResponseSchema]
 
 
-class OrderUsersSchema(OrderResponseSchema):
+class OrderUsersSchema(BaseModel):
+    id: int
+    user_id: int
+    total: float
+    created_at: datetime
     name: str
-    email: EmailStr
+    email: str
     age: int
 
 
-class OrderStatsSchema(OrderSchema):
+class OrderStatsSchema(BaseModel):
     user_id: int
     user_name: str
     orders_count: int

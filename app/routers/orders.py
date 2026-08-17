@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException
-from app.schemas.order_schemas import OrderResponseSchema, OrderCreateSchema, OrderUsersSchema, OrderStatsSchema
+from app.schemas.order_schemas import OrderResponseSchema, OrderCreateSchema, OrderUsersSchema, OrderStatsSchema, OrderListSchema
 from sqlalchemy import select, insert, func, delete, update
 from app.models import products, orders, order_item, users
 from app.database import get_connection
@@ -58,13 +58,18 @@ async def post_order(order: OrderCreateSchema):
                 )
                 await conn.execute(stmt)
                 
-            return {
-                "id": new_order.id,
-                "user_id": new_order.user_id,
-                "total": new_order.total,
-                "created_at": new_order.created_at,
-                "items": order.items
-            }
+                return {
+                    "id": new_order.id,
+                    "user_id": new_order.user_id,
+                    "total": new_order.total,
+                    "created_at": new_order.created_at,
+                    "items": [
+                        {
+                            "product_id": item.product_id,
+                            "quantity": item.quantity,
+                            "price_at_time": float(product_prices[item.product_id].price)
+                        }
+                        for item in order.items]}
     except HTTPException:
         raise
     except SQLAlchemyError as e:
@@ -104,7 +109,7 @@ async def get_stats_orders(min_orders: int = 0):
         return result.mappings().all()
 
 
-@router.get('/', status_code=status.HTTP_200_OK, response_model=List[OrderResponseSchema])
+@router.get('/', status_code=status.HTTP_200_OK, response_model=List[OrderListSchema])
 async def get_orders():
     """Получение всех заказов"""
     stmt = select(orders)
@@ -113,7 +118,7 @@ async def get_orders():
         return result.mappings().all()
 
 
-@router.get('/{id}', status_code=status.HTTP_200_OK, response_model=OrderResponseSchema)
+@router.get('/{id}', status_code=status.HTTP_200_OK, response_model=OrderListSchema)
 async def get_order_id(id: int):
     """Получение заказа по ID"""
     stmt = select(orders).where(orders.c.id == id)
